@@ -160,8 +160,8 @@ pub fn parse_type(raw: &str) -> Result<SqlType> {
             // Tuple(a, b)
             else if let Some(inner) = extract_inner(raw, "Tuple") {
                 SqlType::Tuple(
-                    inner
-                        .split(',')
+                    split_except_brackets(inner, ',')
+                        .into_iter()
                         .map(parse_type)
                         .collect::<Result<Vec<_>>>()?,
                 )
@@ -177,6 +177,35 @@ pub fn parse_type(raw: &str) -> Result<SqlType> {
             }
         }
     })
+}
+
+fn split_except_brackets<'a>(inner: &'a str, separator: char) -> Vec<&'a str> {
+    let mut result: Vec<&'a str> = Vec::new();
+    let mut bracket_level = 0;
+    let mut start_index = 0;
+    for (i, c) in inner.char_indices() {
+        match c {
+            '(' => {
+                bracket_level += 1;
+            }
+            ')' => {
+                if bracket_level > 0 {
+                    bracket_level -= 1;
+                }
+            }
+            ' ' if start_index == i => {
+                start_index += 1;
+            }
+            _ if c == separator && bracket_level == 0 => {
+                // Split only if we are not inside any brackets
+                result.push(inner.get(start_index..i).unwrap());
+                start_index = i + 1;
+            }
+            _ => {}
+        }
+    }
+    result.push(inner.get(start_index..inner.len()).unwrap());
+    result
 }
 
 fn extract_inner<'a>(raw: &'a str, wrapper: &str) -> Option<&'a str> {
