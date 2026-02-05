@@ -161,7 +161,12 @@ pub fn parse_type(raw: &str) -> Result<SqlType> {
             else if let Some(inner) = extract_inner(raw, "Tuple") {
                 SqlType::Tuple(
                     split_except_brackets(inner, ',')
-                        .into_iter()
+                        .iter()
+                        // inner
+                        //     .split(",")
+                        .map(|pair_or_not| {
+                            pair_or_not.split_once(" ").unwrap_or(("", pair_or_not)).1
+                        }) //removing names from Tuple
                         .map(parse_type)
                         .collect::<Result<Vec<_>>>()?,
                 )
