@@ -45,9 +45,17 @@ fn generate_row(dst: &mut impl Write, table: &Table, options: &Options) -> Resul
 
     let has_lifetime = buffer.contains("'a");
     if has_lifetime {
-        writeln!(dst, "pub struct Row<'a> {{")?;
+        writeln!(
+            dst,
+            "pub struct {}Row<'a> {{",
+            options.table.to_upper_camel_case()
+        )?;
     } else {
-        writeln!(dst, "pub struct Row {{")?;
+        writeln!(
+            dst,
+            "pub struct {}Row {{",
+            options.table.to_upper_camel_case()
+        )?;
     }
 
     dst.write_str(&buffer)?;
